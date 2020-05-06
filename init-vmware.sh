@@ -9,16 +9,22 @@ do
    box "Node leader $node" "light_purple" "red"
    docker-machine create \
       --engine-env 'DOCKER_OPTS="-H unix:///var/run/docker.sock"' \
-      --driver virtualbox \
-   leader$node 
+      --driver vmwarevsphere \
+	  --vmwarevsphere-username=${ESX_USER} \
+	  --vmwarevsphere-password=${ESX_PASS} \
+	  --vmwarevsphere-vcenter=${ESX_IP} \
+   leader$node
 done
 for node in $(seq 1 $workers);
 do
    box "Node worker $node" "light_purple" "red"
    docker-machine create \
       --engine-env 'DOCKER_OPTS="-H unix:///var/run/docker.sock"' \
-      --driver virtualbox \
-   worker$node 
+      --driver vmwarevsphere \
+	  --vmwarevsphere-username=${ESX_USER} \
+	  --vmwarevsphere-password=${ESX_PASS} \
+	  --vmwarevsphere-vcenter=${ESX_IP} \
+   worker$node
 done
 
 eval "$(docker-machine env leader1)"
@@ -45,7 +51,6 @@ sleep $t
 docker run -it -d -p 5000:5000 -e HOST=$(docker-machine ip leader1) -e PORT=5000 -v /var/run/docker.sock:/var/run/docker.sock manomarks/visualizer
 box "Open web browser to visualize cluster" "light_purple" "green"
 open http://$(docker-machine ip leader1):5000
-open http://$(docker-machine ip leader1)/index.php
 
 box "To scale type:eval \$(docker-machine env leader1) && docker service scale web=10" "red" "red"
 box "To remove swarm cluster and cleanup: ./remove.sh" "red" "red"
